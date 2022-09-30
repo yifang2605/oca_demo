@@ -1,0 +1,98 @@
+---
+title: "OCA_demo"
+author: "Yi_Fang"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: hide
+    toc: True
+    toc_float: True
+---
+
+## import modeules and packages
+
+```{r}
+library(reticulate)
+```
+
+```{python}
+import pandas as pd
+import janitor
+```
+
+
+## prepare data
+
+read data
+
+```{python}
+pd.set_option('display.max_rows', 10)
+path="data/OCA-STAT-Act.csv"
+oca = pd.read_csv(path, encoding='Latin').clean_names()
+```
+
+variables:
+
+```{python}
+oca.columns.tolist()
+oca = oca[['row_#', 'county', 'top_charge_at_arraignment', 
+           'gender', 'ethnicity', 'race', 'arrest_age']]
+```
+
+filter for site data: 
+
+sites: 
+Nassau Erie Onondaga Queens 
+Niagara Oneida Chemung Oswego 
+Rensselaer Ontario Jefferson Albany 
+Montgomery
+
+```{python}
+site_data = oca[oca['county'].isin(['Montgomery', 'Onondaga', 'Ontario', 'Oneida',
+                                  'Jefferson', 'Chemung', 'Nassau', 'Queens', 
+                                  'Rensselaer', 'Albany', 'Erie', 'Niagara',
+                                  'Oswego'])]
+pd.set_option('display.max_rows', 15)
+site_data['county'].value_counts()
+```
+
+## generate tables
+
+```{python tables_fuction}
+def tables(data, var_name):
+    table = data.groupby(var_name).agg({'row_#': 'count'})
+    table = table.rename({'row_#': '# of cases'},axis=1)
+    table['%'] = 100 * round(table['# of cases'] / table['# of cases'].sum(), 4)
+    table.loc['All'] = [table['# of cases'].sum(), ''] 
+    return table
+```
+
+```{python excel_writer}
+writer = pd.ExcelWriter('results/oca_demo_all_charges.xlsx')
+```
+
+### tables for all charge types for all sites.
+#### race
+
+```{python tables_fuction}
+tables(site_data, 'race').to_excel(writer, 'all_sites_race')
+tables(site_data, ['county', 'race']).to_excel(writer, 'sites_race')
+```
+#### ethnicity
+
+```{python tables_fuction}
+tables(site_data, 'ethnicity').to_excel(writer, 'all_sites_ethnicity')
+tables(site_data, ['county', 'race']).to_excel(writer, 'sites_ethnicity')
+```
+
+#### gender 
+```{python tables_fuction}
+tables(site_data, 'gender').to_excel(writer, 'all_sites_gender')
+tables(site_data, ['county', 'race']).to_excel(writer, 'sites_gender')
+```
+
+```{python excel_writer_save}
+writer.save()
+```
+
+
