@@ -36,7 +36,8 @@ variables:
 ```{python}
 oca.columns.tolist()
 oca = oca[['row_#', 'county', 'top_charge_at_arraignment', 
-           'gender', 'ethnicity', 'race', 'arrest_age']]
+           'gender', 'ethnicity', 'race', 'arrest_age', 
+           'arraign_year', 'arraign_month']]
 ```
 
 filter for site data: 
@@ -54,6 +55,8 @@ site_data = oca[oca['county'].isin(['Montgomery', 'Onondaga', 'Ontario', 'Oneida
                                   'Oswego'])]
 pd.set_option('display.max_rows', 15)
 site_data['county'].value_counts()
+pd.set_option('display.max_rows', None)
+site_data.groupby(['arraign_year', 'arraign_month']).count()
 ```
 
 ## generate tables
@@ -82,13 +85,13 @@ tables(site_data, ['county', 'race']).to_excel(writer, 'sites_race')
 
 ```{python tables_fuction}
 tables(site_data, 'ethnicity').to_excel(writer, 'all_sites_ethnicity')
-tables(site_data, ['county', 'race']).to_excel(writer, 'sites_ethnicity')
+tables(site_data, ['county', 'ethnicity']).to_excel(writer, 'sites_ethnicity')
 ```
 
 #### gender 
 ```{python tables_fuction}
 tables(site_data, 'gender').to_excel(writer, 'all_sites_gender')
-tables(site_data, ['county', 'race']).to_excel(writer, 'sites_gender')
+tables(site_data, ['county', 'gender']).to_excel(writer, 'sites_gender')
 ```
 
 ```{python excel_writer_save}
