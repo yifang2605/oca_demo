@@ -77,24 +77,32 @@ writer = pd.ExcelWriter('results/oca_demo_all_charges.xlsx')
 ### tables for all charge types for all sites.
 #### race
 
-```{python tables_fuction}
+```{python}
 tables(site_data, 'race').to_excel(writer, 'all_sites_race')
 tables(site_data, ['county', 'race']).to_excel(writer, 'sites_race')
 ```
 #### ethnicity
 
-```{python tables_fuction}
+```{python}
 tables(site_data, 'ethnicity').to_excel(writer, 'all_sites_ethnicity')
 tables(site_data, ['county', 'ethnicity']).to_excel(writer, 'sites_ethnicity')
 ```
 
 #### gender 
-```{python tables_fuction}
+```{python}
 tables(site_data, 'gender').to_excel(writer, 'all_sites_gender')
 tables(site_data, ['county', 'gender']).to_excel(writer, 'sites_gender')
 ```
 
+save file
 ```{python excel_writer_save}
+writer.save()
+```
+
+## charge type list
+```{python tables_fuction}
+writer = pd.ExcelWriter('results/charge_types.xlsx')
+pd.DataFrame(site_data.groupby('top_charge_at_arraignment').size()).to_excel(writer, 'top_charge_at_arraignment')
 writer.save()
 ```
 
