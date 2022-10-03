@@ -42,8 +42,9 @@ oca = oca[['row_#', 'county', 'top_charge_at_arraignment',
 
 filter for site data: 
 
-sites: 
-Nassau Erie Onondaga Queens 
+sites:
+
+Nassau Erie Onondaga Queens
 Niagara Oneida Chemung Oswego 
 Rensselaer Ontario Jefferson Albany 
 Montgomery
@@ -55,55 +56,100 @@ site_data = oca[oca['county'].isin(['Montgomery', 'Onondaga', 'Ontario', 'Oneida
                                   'Oswego'])]
 pd.set_option('display.max_rows', 15)
 site_data['county'].value_counts()
+```
+
+check time frame
+
+```{python}
 pd.set_option('display.max_rows', None)
 site_data.groupby(['arraign_year', 'arraign_month']).count()
 ```
 
+export charge type list
+```{python include = FALSE}
+writer = pd.ExcelWriter('results/charge_types.xlsx')
+pd.DataFrame(site_data.groupby('top_charge_at_arraignment').size()).to_excel(writer, 'top_charge_at_arraignment')
+writer.save()
+```
+
+filter for drug related charges:
+```{python}
+drug_related_charges = pd.read_excel('results/charge_types.xlsx', sheet_name='drug_related')
+drug_charge_list = drug_related_charges['drug_related_charges'].tolist()
+drug_site_data = site_data[site_data['top_charge_at_arraignment'].isin(drug_charge_list)]
+```
+
+
 ## generate tables
 
 ```{python tables_fuction}
-def tables(data, var_name):
-    table = data.groupby(var_name).agg({'row_#': 'count'})
-    table = table.rename({'row_#': '# of cases'},axis=1)
-    table['%'] = 100 * round(table['# of cases'] / table['# of cases'].sum(), 4)
-    table.loc['All'] = [table['# of cases'].sum(), ''] 
-    return table
+def tables(data, var1_name, var2_name):
+    table = data.groupby([var1_name, var2_name], as_index=False)['row_#'].size()
+    table = table.rename({'size': 'count'},axis=1)
+    count_table = table.pivot_table(index=var2_name, columns=var1_name, values=['count'], 
+                                        fill_value=0, margins=True, aggfunc='sum').astype(int)
+    percent_table = 100* round(pd.crosstab(table[var2_name], table[var1_name],values=table['count'], 
+                               aggfunc=sum, normalize='columns'), 4)
+    return count_table, percent_table;
 ```
 
 ```{python excel_writer}
-writer = pd.ExcelWriter('results/oca_demo_all_charges.xlsx')
+writer = pd.ExcelWriter('results/oca_demo.xlsx')
 ```
 
 ### tables for all charge types for all sites.
+
 #### race
 
 ```{python}
-tables(site_data, 'race').to_excel(writer, 'all_sites_race')
-tables(site_data, ['county', 'race']).to_excel(writer, 'sites_race')
+count_table, percent_table = tables(site_data, 'county', 'race')
+count_table.to_excel(writer, 'all_charge_count_race')
+percent_table.to_excel(writer, 'all_charge_percentage_race')
 ```
+
 #### ethnicity
 
 ```{python}
-tables(site_data, 'ethnicity').to_excel(writer, 'all_sites_ethnicity')
-tables(site_data, ['county', 'ethnicity']).to_excel(writer, 'sites_ethnicity')
+count_table, percent_table = tables(site_data, 'county', 'ethnicity')
+count_table.to_excel(writer, 'all_charge_count_ethnicity')
+percent_table.to_excel(writer, 'all_charge_percentage_ethnicity')
 ```
 
 #### gender 
+
 ```{python}
-tables(site_data, 'gender').to_excel(writer, 'all_sites_gender')
-tables(site_data, ['county', 'gender']).to_excel(writer, 'sites_gender')
+count_table, percent_table = tables(site_data, 'county', 'gender')
+count_table.to_excel(writer, 'all_charge_count_gender')
+percent_table.to_excel(writer, 'all_charge_percentage_gender')
+```
+
+### tables for drug related charge types for all sites.
+
+#### race
+
+```{python}
+count_table, percent_table = tables(drug_site_data, 'county', 'race')
+count_table.to_excel(writer, 'drug_charge_count_race')
+percent_table.to_excel(writer, 'drug_charge_percentage_race')
+```
+
+#### ethnicity
+
+```{python}
+count_table, percent_table = tables(drug_site_data, 'county', 'ethnicity')
+count_table.to_excel(writer, 'drug_charge_count_ethnicity')
+percent_table.to_excel(writer, 'drug_percentage_ethnicity')
+```
+
+#### gender 
+
+```{python}
+count_table, percent_table = tables(drug_site_data, 'county', 'gender')
+count_table.to_excel(writer, 'drug_charge_count_gender')
+percent_table.to_excel(writer, 'drug_charge_percentage_gender')
 ```
 
 save file
 ```{python excel_writer_save}
 writer.save()
 ```
-
-## charge type list
-```{python tables_fuction}
-writer = pd.ExcelWriter('results/charge_types.xlsx')
-pd.DataFrame(site_data.groupby('top_charge_at_arraignment').size()).to_excel(writer, 'top_charge_at_arraignment')
-writer.save()
-```
-
-
