@@ -74,7 +74,7 @@ writer.save()
 
 filter for drug related charges:
 ```{python}
-drug_related_charges = pd.read_excel('results/charge_types.xlsx', sheet_name='drug_related')
+drug_related_charges = pd.read_excel('data/charge_types.xlsx', sheet_name='drug_related')
 drug_charge_list = drug_related_charges['drug_related_charges'].tolist()
 drug_site_data = site_data[site_data['top_charge_at_arraignment'].isin(drug_charge_list)]
 ```
